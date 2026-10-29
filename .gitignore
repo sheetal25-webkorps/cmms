@@ -5,6 +5,6 @@
 **/.DS_Store
 atlas_backups
 docker-compose-dev.yml
-logo
+/logo
 *.lic
 docker-compose-minio.yml
