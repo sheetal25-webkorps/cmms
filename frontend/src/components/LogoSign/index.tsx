@@ -2,8 +2,8 @@ import { Box, styled, useMediaQuery, useTheme, SxProps, Theme } from '@mui/mater
 import { Link as RouterLink } from 'react-router-dom';
 import { useBrand } from '../../hooks/useBrand';
 
-export const WEBKORPS_ICON = '/static/images/logo/webkorps-icon.png';
-export const WEBKORPS_ICON_WHITE = '/static/images/logo/webkorps-icon-white.png';
+export const WEBKORPS_ICON = '/static/images/logo/logo-white.png';
+export const WEBKORPS_ICON_WHITE = '/static/images/logo/logo-white.png';
 
 const LogoWrapper = styled(RouterLink)(({ theme }) => ({
   display: 'inline-flex',
