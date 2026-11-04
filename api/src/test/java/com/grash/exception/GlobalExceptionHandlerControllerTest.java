@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -132,6 +133,31 @@ class GlobalExceptionHandlerControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertNotNull(result.getBody());
         assertFalse(result.getBody().isSuccess());
-        assertEquals("Unexpected failure", result.getBody().getMessage());
+        // Internal exception details must never reach the client.
+        assertEquals("An unexpected error occurred. Please try again or contact your administrator.",
+                result.getBody().getMessage());
+    }
+
+    @Test
+    void handleDataIntegrityViolation_returnsFriendlyBadRequest() {
+        DataIntegrityViolationException ex = new DataIntegrityViolationException(
+                "could not execute statement; constraint [fk_asset_location]");
+
+        ResponseEntity<SuccessResponse> result = handler.handleDataIntegrityViolation(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertFalse(result.getBody().getMessage().contains("fk_asset_location"));
+    }
+
+    @Test
+    void handleMethodArgumentNotValidException_namesFieldForBuiltInMessages() {
+        BindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "vendorPostDTO");
+        bindingResult.addError(new FieldError("vendorPostDTO", "companyName", "must not be null"));
+        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+        when(ex.getBindingResult()).thenReturn(bindingResult);
+
+        ResponseEntity<SuccessResponse> result = handler.handleMethodArgumentNotValidException(ex);
+
+        assertEquals("companyName must not be null", result.getBody().getMessage());
     }
 }

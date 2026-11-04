@@ -88,6 +88,7 @@ public class AssetService {
                 setAssetCustomFields(asset, assetPostDTO.getCustomFields(), company);
             }
         }
+        asset.setParts(resolveParts(asset.getParts(), company.getId()));
         if (asset.getParentAsset() != null && !licenseService.hasEntitlement(LicenseEntitlement.ASSET_HIERARCHY))
             throw new CustomException("You need a license to add a child asset to another asset.",
                     HttpStatus.FORBIDDEN);
@@ -408,6 +409,22 @@ public class AssetService {
         } else throw new CustomException("Access denied", HttpStatus.FORBIDDEN);
     }
 
+    /**
+     * Clients reference parts by id only; Part is versioned, so load the managed parts
+     * (scoped to the company) instead of persisting id-only stubs.
+     */
+    private List<Part> resolveParts(Collection<Part> parts, Long companyId) {
+        if (parts == null) return new ArrayList<>();
+        List<Part> resolved = new ArrayList<>();
+        for (Part part : parts) {
+            if (part == null || part.getId() == null)
+                throw new CustomException("Invalid part", HttpStatus.NOT_ACCEPTABLE);
+            resolved.add(partService.findByIdAndCompany(part.getId(), companyId)
+                    .orElseThrow(() -> new CustomException("Part not found", HttpStatus.NOT_FOUND)));
+        }
+        return resolved;
+    }
+
     @Transactional
     public Asset patch(Long id, AssetPatchDTO asset, User user) {
         Optional<Asset> optionalAsset = findById(id);
@@ -416,10 +433,16 @@ public class AssetService {
             Asset savedAsset = optionalAsset.get();
             em.detach(savedAsset);
             if (savedAsset.canBeEditedBy(user)) {
-                if (!asset.getStatus().isReallyDown() && savedAsset.getStatus().isReallyDown()) {
-                    stopDownTime(savedAsset.getId(), Helper.getLocale(user));
-                } else if (asset.getStatus().isReallyDown() && !savedAsset.getStatus().isReallyDown()) {
-                    triggerDownTime(savedAsset.getId(), Helper.getLocale(user), asset.getStatus());
+                // A partial update may omit the status: keep the current one (the mapper copies nulls)
+                // and only react to an actual status change.
+                if (asset.getStatus() == null) {
+                    asset.setStatus(savedAsset.getStatus());
+                } else {
+                    if (!asset.getStatus().isReallyDown() && savedAsset.getStatus().isReallyDown()) {
+                        stopDownTime(savedAsset.getId(), Helper.getLocale(user));
+                    } else if (asset.getStatus().isReallyDown() && !savedAsset.getStatus().isReallyDown()) {
+                        triggerDownTime(savedAsset.getId(), Helper.getLocale(user), asset.getStatus());
+                    }
                 }
                 if (asset.getBarCode() != null) {
                     Optional<Asset> optionalAssetWithSameBarCode =
@@ -434,6 +457,9 @@ public class AssetService {
                     if (optionalAssetWithSameNfcId.isPresent() && !optionalAssetWithSameNfcId.get().getId().equals(id)) {
                         throw new CustomException("Asset with same nfc code exists", HttpStatus.NOT_ACCEPTABLE);
                     }
+                }
+                if (asset.getParts() != null) {
+                    asset.setParts(resolveParts(asset.getParts(), user.getCompany().getId()));
                 }
                 if (asset.getParentAsset() != null && asset.getParentAsset().getId().equals(id))
                     throw new CustomException("Parent asset cannot be the same id", HttpStatus.NOT_ACCEPTABLE);

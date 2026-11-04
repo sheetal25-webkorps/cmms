@@ -30,6 +30,7 @@ import CheckTwoToneIcon from '@mui/icons-material/CheckTwoTone';
 import useAuth from '../../../../hooks/useAuth';
 import { CustomSnackBarContext } from '../../../../contexts/CustomSnackBarContext';
 import { emailRegExp } from '../../../../utils/validators';
+import { getErrorMessage } from 'src/utils/api';
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & { children: ReactElement<any, any> },
@@ -174,7 +175,10 @@ function RecoverPasswordBasic() {
                     }
                   })
                   .catch((err) =>
-                    showSnackBar(t("The operation didn't succeed"), 'error')
+                    showSnackBar(
+                      getErrorMessage(err, t("The operation didn't succeed")),
+                      'error'
+                    )
                   )
                   .finally(() => setSubmitting(false));
               }}

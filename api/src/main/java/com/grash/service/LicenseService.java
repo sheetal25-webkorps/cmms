@@ -59,7 +59,9 @@ public class LicenseService {
         }
 
         if (!hasLicenseKey() && !hasLicenseFile()) {
-            return clearCacheAndReturnInvalid();
+            // Self-hosted under AGPLv3 (no commercial key/file configured): every feature is enabled.
+            // A configured commercial license key or file is still validated below.
+            return selfHostedAgplState();
         }
 
         // Try license file validation first if available
@@ -135,6 +137,17 @@ public class LicenseService {
                 .planName(cachedLicenseResponse.getData().getAttributes().getName())
                 .expirationDate(rawExpiry == null ? null : Date.from(Instant.parse(rawExpiry)))
                 .usersCount(extractUsersCount(cachedLicenseResponse))
+                .build();
+    }
+
+    private LicensingState selfHostedAgplState() {
+        return LicensingState.builder()
+                .hasLicense(false)
+                .valid(true)
+                .entitlements(Arrays.stream(LicenseEntitlement.values())
+                        .map(Enum::toString)
+                        .collect(Collectors.toSet()))
+                .planName("Self-hosted (AGPLv3)")
                 .build();
     }
 

@@ -88,11 +88,15 @@ export default function LinkModal({
         ) => {
           setSubmitting(true);
           dispatch(createRelation(workOrderId, _values))
-            .catch((err) => showSnackBar(getErrorMessage(err), 'error'))
-            .finally(() => {
-              setSubmitting(false);
+            .then(() => {
+              showSnackBar(
+                t('link_added_success', { defaultValue: 'Link added' }),
+                'success'
+              );
               onClose();
-            });
+            })
+            .catch((err) => showSnackBar(getErrorMessage(err), 'error'))
+            .finally(() => setSubmitting(false));
         }}
       >
         {({

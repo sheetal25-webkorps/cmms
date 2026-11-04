@@ -155,8 +155,11 @@ export default function AddTimeModal({
                   .then(() => onClose());
               } else
                 return dispatch(createLabor(workOrderId, formattedValues))
-                  .catch((err) => showSnackBar(getErrorMessage(err), 'error'))
-                  .then(() => onClose());
+                  .then(() => {
+                    showSnackBar(t('time_added_success', { defaultValue: 'Time added' }), 'success');
+                    onClose();
+                  })
+                  .catch((err) => showSnackBar(getErrorMessage(err), 'error'));
             }}
           />
         ) : (

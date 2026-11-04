@@ -70,9 +70,9 @@ export default function TimeSection({
 
   const confirmDelete = () => {
     if (laborToDelete) {
-      dispatch(deleteLabor(workOrder.id, laborToDelete.id)).catch((err) =>
-        showSnackBar(getErrorMessage(err), 'error')
-      );
+      dispatch(deleteLabor(workOrder.id, laborToDelete.id))
+        .then(() => showSnackBar(t('Deleted successfully'), 'success'))
+        .catch((err) => showSnackBar(getErrorMessage(err), 'error'));
     }
     setOpenDeleteConfirm(false);
     setLaborToDelete(null);

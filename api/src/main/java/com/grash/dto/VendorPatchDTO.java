@@ -14,6 +14,9 @@ import java.util.List;
 @Schema(description = "Patch request data transfer object for updating vendor information")
 public class VendorPatchDTO extends BasicInfos {
 
+    @Schema(description = "Company name")
+    private String companyName;
+
     @Schema(description = "Type of the vendor")
     private String vendorType;
 

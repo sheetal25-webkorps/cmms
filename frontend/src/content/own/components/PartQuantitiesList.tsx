@@ -16,6 +16,8 @@ import { CompanySettingsContext } from '../../../contexts/CompanySettingsContext
 import { getFormattedCostPerUnit } from '../../../utils/formatters';
 import { deletePartQuantity } from '../../../slices/partQuantity';
 import { useDispatch } from '../../../store';
+import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
+import { getErrorMessage } from 'src/utils/api';
 
 interface PartQuantityListProps {
   partQuantities: PartQuantityMiniDTO[];
@@ -34,6 +36,7 @@ export default function PartQuantitiesList({
   const { t }: { t: any } = useTranslation();
   const dispatch = useDispatch();
   const { getFormattedCurrency } = useContext(CompanySettingsContext);
+  const { showSnackBar } = useContext(CustomSnackBarContext);
 
   return (
     <List>
@@ -71,7 +74,13 @@ export default function PartQuantitiesList({
                       onDelete(partQuantity);
                     } else {
                       if (window.confirm(t('confirm_delete_row'))) {
-                        dispatch(deletePartQuantity(partQuantity.id));
+                        dispatch(deletePartQuantity(partQuantity.id))
+                          .then(() =>
+                            showSnackBar(t('Deleted successfully'), 'success')
+                          )
+                          .catch((err) =>
+                            showSnackBar(getErrorMessage(err), 'error')
+                          );
                       }
                     }
                   }}

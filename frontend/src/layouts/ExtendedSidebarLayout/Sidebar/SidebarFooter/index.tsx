@@ -53,7 +53,9 @@ function SidebarFooter({ collapsed = false }: { collapsed?: boolean }) {
         borderTop: `1px solid ${alpha(theme.colors.alpha.trueWhite[100], 0.08)}`
       }}
     >
-      {user.ownsCompany && user.superAccountRelations.length === 0 && (
+      {isCloudVersion &&
+        user.ownsCompany &&
+        user.superAccountRelations.length === 0 && (
         <Tooltip placement={collapsed ? 'right' : 'top'} arrow title={t('upgrade_now')}>
           <IconButton
             sx={footerButtonSx}

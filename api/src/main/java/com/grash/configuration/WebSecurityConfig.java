@@ -5,6 +5,7 @@ import com.grash.service.LicenseService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -43,6 +44,24 @@ public class WebSecurityConfig {
     private boolean enableSso;
     @Value("${ldap.enabled:false}")
     private boolean ldapEnabled;
+
+    // These filters are Spring beans, so Spring Boot would also register them as plain servlet filters that
+    // run *before* the security chain. Being OncePerRequestFilters, their in-chain run would then be skipped:
+    // rate limiting would never see the authenticated user and every request would count against the strict
+    // per-IP anonymous limit. Disable the automatic registration so they only run inside the security chain.
+    @Bean
+    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
+        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<ApiKeyAuthFilter> apiKeyAuthFilterRegistration(ApiKeyAuthFilter filter) {
+        FilterRegistrationBean<ApiKeyAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, ApiKeyAuthFilter apiKeyAuthFilter) throws Exception {

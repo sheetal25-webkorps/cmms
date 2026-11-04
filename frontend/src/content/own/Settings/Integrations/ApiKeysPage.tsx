@@ -51,6 +51,7 @@ import * as Yup from 'yup';
 import { CompanySettingsContext } from '../../../../contexts/CompanySettingsContext';
 import { onOpenApiDocs } from '../../../../utils/overall';
 import DateTimePicker from '@mui/lab/DateTimePicker';
+import { getErrorMessage } from '../../../../utils/api';
 
 const DialogWrapper = styled(Dialog)(
   () => `
@@ -114,6 +115,8 @@ function ApiKeys() {
         setShowCode(true);
         showSnackBar(t('api_key_created_success'), 'success');
       }
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
     } finally {
       setLoadingCreate(false);
     }
@@ -129,10 +132,14 @@ function ApiKeys() {
     setCurrentApiKey(null);
   };
 
-  const handleDeleteApiKey = () => {
-    if (currentApiKey) {
-      dispatch(deleteApiKey(currentApiKey.id));
+  const handleDeleteApiKey = async () => {
+    if (!currentApiKey) return;
+    try {
+      await dispatch(deleteApiKey(currentApiKey.id));
       showSnackBar(t('Deleted successfully'), 'success');
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
+    } finally {
       handleCloseDeleteDialog();
     }
   };
@@ -159,6 +166,8 @@ function ApiKeys() {
         setShowRotatedCode(true);
         showSnackBar(t('api_key_rotated_success'), 'success');
       }
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
     } finally {
       setLoadingRotate(false);
     }

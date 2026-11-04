@@ -1,5 +1,6 @@
 package com.grash.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import com.grash.advancedsearch.InvalidSearchFieldException;
 import com.grash.dto.SuccessResponse;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -10,7 +11,10 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.FieldError;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -23,6 +27,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.xml.bind.ValidationException;
 
 import java.util.Map;
@@ -30,6 +35,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandlerController {
 
     @Bean
@@ -78,13 +84,25 @@ public class GlobalExceptionHandlerController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<SuccessResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getAllErrors().stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .map(GlobalExceptionHandlerController::describeValidationError)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining(", "));
         if (message.isEmpty()) {
             message = "Validation failed";
         }
         return new ResponseEntity<>(new SuccessResponse(false, message), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Built-in constraint messages ("must not be null") don't say which field failed, so they are
+     * prefixed with the field name. Custom, already descriptive messages are kept as-is.
+     */
+    private static String describeValidationError(ObjectError error) {
+        String message = error.getDefaultMessage();
+        if (message != null && message.startsWith("must ") && error instanceof FieldError fieldError) {
+            return fieldError.getField() + " " + message;
+        }
+        return message;
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
@@ -100,10 +118,30 @@ public class GlobalExceptionHandlerController {
         return new ResponseEntity<>(new SuccessResponse(false, "Resource not found"), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<SuccessResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + " " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        return new ResponseEntity<>(new SuccessResponse(false, message.isEmpty() ? "Validation failed" : message),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<SuccessResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        return new ResponseEntity<>(new SuccessResponse(false,
+                "This action conflicts with existing data. The record may be referenced by other records or " +
+                        "contain a duplicate value."), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<SuccessResponse> handleException(HttpServletResponse res, Exception ex) {
-        ex.printStackTrace();
-        return new ResponseEntity<>(new SuccessResponse(false, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        // Full details go to the server log only; clients get a generic message (no internals/stack traces).
+        log.error("Unhandled exception", ex);
+        return new ResponseEntity<>(new SuccessResponse(false,
+                "An unexpected error occurred. Please try again or contact your administrator."),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

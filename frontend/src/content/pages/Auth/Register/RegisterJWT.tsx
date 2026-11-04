@@ -30,7 +30,7 @@ import { useUtmTracker } from '@nik0di3m/utm-tracker-hook';
 import { inviteUsers } from '../../../../slices/user';
 import { useDispatch } from '../../../../store';
 import { homeUrl } from '../../../../config';
-import { isNetworkError } from '../../../../utils/api';
+import { getErrorMessage, isNetworkError } from '../../../../utils/api';
 import { getLocalizedHomeUrl } from '../../../../utils/urlPaths';
 
 function RegisterJWT({
@@ -99,12 +99,18 @@ function RegisterJWT({
         valuesClone.phone =
           (values.countryCode ? `+${values.countryCode.phone}` : '') +
           `${values.phone}`;
-        if (invitationMode)
-          await dispatch(inviteUsers(role, [valuesClone.email], true));
-        return register(
-          role ? { ...valuesClone, role: { id: role } } : valuesClone,
+        // Invite inside the chain so its errors (e.g. "Email already in use") reach the catch below.
+        return (
           invitationMode
+            ? dispatch(inviteUsers(role, [valuesClone.email], true))
+            : Promise.resolve()
         )
+          .then(() =>
+            register(
+              role ? { ...valuesClone, role: { id: role } } : valuesClone,
+              invitationMode
+            )
+          )
           .then(async (res) => {
             if (invitationMode) {
               onInvitationSuccess();
@@ -121,25 +127,8 @@ function RegisterJWT({
               console.error(err);
               return;
             }
-            let errorMessage = 'An unknown error occurred';
-
-            // Check if the error message contains a JSON string
-            if (typeof err.message === 'string') {
-              try {
-                const parsedError = JSON.parse(err.message);
-                // If the JSON contains a 'message' field, use it
-                if (parsedError && parsedError.message) {
-                  errorMessage = parsedError.message;
-                }
-              } catch (e) {
-                // If parsing fails, fallback to the original error message
-                errorMessage = err.message;
-              }
-            } else {
-              // In case err.message is not a string, just use the general error
-              errorMessage = 'An unknown error occurred';
-            }
-            showSnackBar(errorMessage, 'error');
+            // Shows the backend's message (e.g. "Email already in use") when it is meant for users.
+            showSnackBar(getErrorMessage(err), 'error');
             console.error(err);
           })
           .finally(() => {

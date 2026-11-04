@@ -124,23 +124,17 @@ function CompanyPlan(props: CompanyPlanProps) {
             : ''}
         </Typography>
         <Box sx={{ mt: 2 }}>
-          <Button
-            sx={{ mr: 2 }}
-            variant="contained"
-            component={isCloudVersion ? RouterLink : 'a'}
-            {...(isCloudVersion
-              ? { to: '/app/subscription/plans' }
-              : {
-                  href: getLocalizedHomeUrl(
-                    'pricing?type=selfhosted',
-                    i18n.language
-                  ),
-                  target: '_blank',
-                  rel: 'noopener noreferrer'
-                })}
-          >
-            {t('upgrade_now')}
-          </Button>
+          {/* Self-hosted deployments have every feature enabled; upgrades only apply to the cloud plan. */}
+          {isCloudVersion && (
+            <Button
+              sx={{ mr: 2 }}
+              variant="contained"
+              component={RouterLink}
+              to="/app/subscription/plans"
+            >
+              {t('upgrade_now')}
+            </Button>
+          )}
           {isCloudVersion && (
             <Button
               onClick={() => {

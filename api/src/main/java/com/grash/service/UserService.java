@@ -28,6 +28,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
@@ -53,6 +54,7 @@ import static com.grash.utils.Consts.usageBasedFreeLimits;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -139,10 +141,8 @@ public class UserService {
         if (!licenseService.hasEntitlement(LicenseEntitlement.UNLIMITED_USERS)
                 && userRepository.hasMorePaidUsersThan(limit - newUsersCount)
         )
-            throw new RuntimeException("Cannot create more users than the " + (licensingState.isHasLicense() ?
-                    "paid" : "free") + " license allows: " + limit + ". " +
-                    "Refer to" +
-                    " https://github.com/Grashjs/cmms/blob/main/dev-docs/Disable%20users.md");
+            throw new CustomException("Cannot create more users than the " + (licensingState.isHasLicense() ?
+                    "paid" : "free") + " license allows: " + limit + ".", HttpStatus.FORBIDDEN);
     }
 
     public SignupSuccessResponse<User> signup(UserSignupRequest userReq) {
@@ -361,9 +361,12 @@ public class UserService {
     }
 
     private void throwIfEmailNotificationsNotEnabled() {
-        if (!enableMails)
-            throw new CustomException("Please enable mails and configure SMTP in the environment variables",
-                    HttpStatus.NOT_ACCEPTABLE);
+        if (!enableMails) {
+            log.warn("Email action requested but mails are disabled: set ENABLE_EMAIL_NOTIFICATIONS=true and " +
+                    "configure SMTP_* (or SendGrid) environment variables");
+            throw new CustomException("Email is not configured on this server, so this action is unavailable. " +
+                    "Please contact your administrator.", HttpStatus.NOT_ACCEPTABLE);
+        }
     }
 
     public void invite(String email, Role role, User inviter, Boolean disableSendingMails) {

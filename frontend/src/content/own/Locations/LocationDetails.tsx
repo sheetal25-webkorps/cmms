@@ -42,6 +42,8 @@ import { getAssetUrl } from '../../../utils/urlPaths';
 import useAuth from '../../../hooks/useAuth';
 import { PermissionEntity } from '../../../models/owns/role';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
+import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
+import { getErrorMessage } from 'src/utils/api';
 
 interface LocationDetailsProps {
   location: Location;
@@ -54,6 +56,7 @@ export default function LocationDetails(props: LocationDetailsProps) {
   const { t }: { t: any } = useTranslation();
   const dispatch = useDispatch();
   const { getFormattedDate, uploadFiles } = useContext(CompanySettingsContext);
+  const { showSnackBar } = useContext(CustomSnackBarContext);
   const [openAddFloorPlan, setOpenAddFloorPlan] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>('assets');
   const { assetsByLocation } = useSelector((state) => state.assets);
@@ -144,21 +147,24 @@ export default function LocationDetails(props: LocationDetailsProps) {
             values={{}}
             onChange={({ field, e }) => {}}
             onSubmit={async (values) => {
-              return new Promise<void>((resolve, rej) => {
-                uploadFiles([], values.image)
-                  .then((files) => {
-                    values = {
-                      ...values,
-                      image: files.length ? { id: files[0].id } : null
-                    };
-                    dispatch(createFloorPlan(location.id, values))
-                      .then(() => setOpenAddFloorPlan(false))
-                      .finally(resolve);
-                  })
-                  .catch((err) => {
-                    rej(err);
-                  });
-              });
+              try {
+                const files = await uploadFiles([], values.image);
+                // The API expects the uploaded file reference ({ id }) as the image.
+                values = {
+                  ...values,
+                  image: files.length ? { id: files[0].id } : null
+                };
+                await dispatch(createFloorPlan(location.id, values));
+                showSnackBar(
+                  t('floor_plan_added_success', {
+                    defaultValue: 'Floor plan added'
+                  }),
+                  'success'
+                );
+                setOpenAddFloorPlan(false);
+              } catch (err) {
+                showSnackBar(getErrorMessage(err), 'error');
+              }
             }}
           />
         </Box>

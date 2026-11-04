@@ -106,6 +106,9 @@ public class NotificationService {
             }
         });
 
+        // No registered mobile devices: nothing to send (the Expo client fails on empty batches).
+        if (tokens.isEmpty()) return;
+
         ExpoPushMessage expoPushMessage = new ExpoPushMessage();
         expoPushMessage.getTo().addAll(tokens);
         expoPushMessage.setTitle(title);

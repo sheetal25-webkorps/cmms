@@ -61,9 +61,9 @@ export default function CostSection({
 
   const confirmDelete = () => {
     if (costToDelete) {
-      dispatch(deleteAdditionalCost(workOrder.id, costToDelete.id)).catch(
-        (err) => showSnackBar(getErrorMessage(err), 'error')
-      );
+      dispatch(deleteAdditionalCost(workOrder.id, costToDelete.id))
+        .then(() => showSnackBar(t('Deleted successfully'), 'success'))
+        .catch((err) => showSnackBar(getErrorMessage(err), 'error'));
     }
     setOpenDeleteConfirm(false);
     setCostToDelete(null);

@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -178,5 +179,18 @@ class RateLimitFilterTest {
         verify(response).setCharacterEncoding("UTF-8");
         assertTrue(stringWriter.toString().contains("Rate limit exceeded"),
                 "Response should contain rate limit error message");
+    }
+
+    @Test
+    void websocketHandshake_isNotRateLimited() {
+        org.springframework.mock.web.MockHttpServletRequest wsRequest =
+                new org.springframework.mock.web.MockHttpServletRequest("GET", "/ws/info");
+        wsRequest.setServletPath("/ws/info");
+        org.springframework.mock.web.MockHttpServletRequest apiRequest =
+                new org.springframework.mock.web.MockHttpServletRequest("GET", "/assets/1");
+        apiRequest.setServletPath("/assets/1");
+
+        assertTrue(filter.shouldNotFilter(wsRequest));
+        assertFalse(filter.shouldNotFilter(apiRequest));
     }
 }

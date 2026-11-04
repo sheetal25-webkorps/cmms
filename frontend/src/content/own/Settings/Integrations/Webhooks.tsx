@@ -58,6 +58,7 @@ import {
   PART_FIELDS,
   getWebhookEventLabelKey
 } from '../../../../models/owns/webhookEndpoint';
+import { getErrorMessage } from '../../../../utils/api';
 import CustomDatagrid2, {
   CustomDatagridColumn2
 } from '../../components/CustomDatagrid2';
@@ -123,6 +124,8 @@ function Webhooks() {
         showSnackBar(t('webhook_endpoint_created_success'), 'success');
         handleCloseCreateModal();
       }
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
     } finally {
       setLoadingCreate(false);
     }
@@ -138,20 +141,29 @@ function Webhooks() {
     setCurrentEndpoint(null);
   };
 
-  const handleDeleteEndpoint = () => {
-    if (currentEndpoint) {
-      dispatch(deleteWebhookEndpoint(currentEndpoint.id));
+  const handleDeleteEndpoint = async () => {
+    if (!currentEndpoint) return;
+    try {
+      await dispatch(deleteWebhookEndpoint(currentEndpoint.id));
       showSnackBar(t('webhook_endpoint_deleted_success'), 'success');
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
+    } finally {
       handleCloseDeleteDialog();
     }
   };
 
   const handleRotateSecret = async (id: number) => {
     setRotatingSecretId(id);
-    const newSecret = await dispatch(rotateSecret(id));
-    setRotatingSecretId(null);
-    if (newSecret) {
-      showSnackBar(t('webhook_endpoint_secret_rotated'), 'success');
+    try {
+      const newSecret = await dispatch(rotateSecret(id));
+      if (newSecret) {
+        showSnackBar(t('webhook_endpoint_secret_rotated'), 'success');
+      }
+    } catch (err) {
+      showSnackBar(getErrorMessage(err), 'error');
+    } finally {
+      setRotatingSecretId(null);
     }
   };
 

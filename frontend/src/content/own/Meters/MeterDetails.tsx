@@ -57,6 +57,8 @@ import {
 import { format } from 'date-fns';
 import { subDays } from 'date-fns';
 import useDateLocale from '../../../hooks/useDateLocale';
+import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
+import { getErrorMessage } from 'src/utils/api';
 
 interface MeterDetailsProps {
   meter: Meter;
@@ -75,6 +77,7 @@ export default function MeterDetails(props: MeterDetailsProps) {
   const [currentTab, setCurrentTab] = useState<string>('details');
   const dateLocale = useDateLocale();
   const { getFormattedDate } = useContext(CompanySettingsContext);
+  const { showSnackBar } = useContext(CustomSnackBarContext);
   const theme = useTheme();
   const { histogramData, loadingHistogram } = useSelector(
     (state) => state.readings
@@ -282,7 +285,18 @@ export default function MeterDetails(props: MeterDetailsProps) {
                   onSubmit={async (values) => {
                     return dispatch(createReading(meter.id, values))
                       .then(onNewReading)
-                      .then(onRefreshHistogram);
+                      .then(onRefreshHistogram)
+                      .then(() =>
+                        showSnackBar(
+                          t('reading_added_success', {
+                            defaultValue: 'Reading added'
+                          }),
+                          'success'
+                        )
+                      )
+                      .catch((err) =>
+                        showSnackBar(getErrorMessage(err), 'error')
+                      );
                   }}
                 />
               ) : null}

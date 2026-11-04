@@ -23,6 +23,7 @@ import { phoneRegExp } from '../../../utils/validators';
 import CustomDialog from '../components/CustomDialog';
 import useAuth from '../../../hooks/useAuth';
 import { CustomSnackBarContext } from '../../../contexts/CustomSnackBarContext';
+import { getErrorMessage } from '../../../utils/api';
 
 function ProfileDetails() {
   const { t }: { t: any } = useTranslation();
@@ -277,7 +278,15 @@ function ProfileDetails() {
               handleClosePasswordModal();
               showSnackBar(t('password_change_success'), 'success');
             })
-            .catch((err) => showSnackBar(t('wrong_password'), 'error'))
+            .catch((err) =>
+              showSnackBar(
+                // 406 means the current password didn't match; anything else gets its own message.
+                err?.status === 406
+                  ? t('wrong_password')
+                  : getErrorMessage(err),
+                'error'
+              )
+            )
             .finally(() => setSubmitting(false));
         }}
       >

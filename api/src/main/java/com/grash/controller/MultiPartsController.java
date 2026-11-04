@@ -69,7 +69,8 @@ public class MultiPartsController {
                              HttpServletRequest req) {
         User user = userService.whoami(req);
         if (user.getRole().getCreatePermissions().contains(PermissionEntity.PARTS_AND_MULTIPARTS)) {
-            return multiPartsMapper.toShowDto(multiPartsService.create(multiPartsReq));
+            return multiPartsMapper.toShowDto(multiPartsService.create(multiPartsReq,
+                    user.getCompany().getId()));
         } else throw new CustomException("Access denied", HttpStatus.FORBIDDEN);
     }
 

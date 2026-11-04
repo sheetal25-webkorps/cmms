@@ -28,6 +28,8 @@ import mime from 'mime';
 import { InsertDriveFile } from '@mui/icons-material';
 import { getUserUrl } from '../../../../utils/urlPaths';
 import { useNavigate } from 'react-router-dom';
+import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
+import { getErrorMessage } from 'src/utils/api';
 
 const CommentWrapper = styled(Box)<{ highlighted?: boolean }>(
   ({ theme, highlighted }) => `
@@ -60,6 +62,7 @@ export default function CommentItem(props: CommentItemProps) {
   const { comment, workOrderId, highlighted = false } = props;
   const { t } = useTranslation();
   const { getFormattedDate } = useContext(CompanySettingsContext);
+  const { showSnackBar } = useContext(CustomSnackBarContext);
   const navigate = useNavigate();
   const { user } = useAuth();
   const dispatch = useDispatch();
@@ -96,7 +99,9 @@ export default function CommentItem(props: CommentItemProps) {
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete_comment'))) {
-      dispatch(deleteComment(comment.id, workOrderId));
+      dispatch(deleteComment(comment.id, workOrderId))
+        .then(() => showSnackBar(t('Deleted successfully'), 'success'))
+        .catch((err) => showSnackBar(getErrorMessage(err), 'error'));
     }
   };
 
@@ -111,7 +116,9 @@ export default function CommentItem(props: CommentItemProps) {
           },
           workOrderId
         )
-      ).then(() => setIsEditing(false));
+      )
+        .then(() => setIsEditing(false))
+        .catch((err) => showSnackBar(getErrorMessage(err), 'error'));
     }
   };
 

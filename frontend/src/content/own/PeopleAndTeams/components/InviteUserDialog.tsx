@@ -24,6 +24,7 @@ import { CustomSnackBarContext } from '../../../../contexts/CustomSnackBarContex
 import { useDispatch, useSelector } from '../../../../store';
 import { isEmailVerificationEnabled } from '../../../../config';
 import CreateUser from './CreateUser';
+import { getErrorMessage } from '../../../../utils/api';
 import { Simulate } from 'react-dom/test-utils';
 
 export default function InviteUserDialog({
@@ -185,8 +186,8 @@ export default function InviteUserDialog({
                         setCurrentEmail('');
                         showSnackBar(t('users_invite_success'), 'success');
                       })
-                      .catch((err: { message: string }) => {
-                        showSnackBar(JSON.parse(err.message).message, 'error');
+                      .catch((err) => {
+                        showSnackBar(getErrorMessage(err), 'error');
                       })
                       .finally(() => setIsInviteSubmitting(false));
                   if (roleId) {

@@ -30,6 +30,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimiterService rateLimiterService;
     private final ClientIpResolver clientIpResolver;
 
+    /**
+     * The STOMP/SockJS handshake (/ws/info, transport probes) cannot carry the JWT header, so it would always
+     * count against the per-IP anonymous bucket. Browsers repeat it on every page load and reconnect, which
+     * exhausted the anonymous limit for everyone sharing an IP (e.g. an office NAT) and then blocked logins.
+     * The handshake exposes no data; message delivery itself is authenticated separately.
+     */
+    @Override
+    protected boolean shouldNotFilter(@NotNull HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path != null && (path.equals("/ws") || path.startsWith("/ws/"));
+    }
+
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
                                     @NotNull HttpServletResponse response,
