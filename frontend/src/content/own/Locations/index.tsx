@@ -826,7 +826,7 @@ function Locations() {
             try {
               await exportEntity('locations');
             } catch (error) {
-              showSnackBar(t('Export failed'), 'error');
+              showSnackBar(getErrorMessage(error, t('Export failed')), 'error');
             }
           }}
         >
@@ -1014,7 +1014,11 @@ function Locations() {
         <Helmet>
           <title>{t('locations')}</title>
         </Helmet>
-        <Box justifyContent="center" alignItems="stretch" paddingX={{ xs: 2, md: 3, lg: 4 }}>
+        <Box
+          justifyContent="center"
+          alignItems="stretch"
+          paddingX={{ xs: 2, md: 3, lg: 4 }}
+        >
           <Box
             my={1}
             display="flex"

@@ -15,9 +15,10 @@ interface MobileAppDownloadDialogProps {
   onClose: () => void;
 }
 
-const PLAY_STORE_URL =
+export const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.atlas.cmms';
-const APP_STORE_URL = 'https://apps.apple.com/us/app/atlas-cmms/id6751547284';
+export const APP_STORE_URL =
+  'https://apps.apple.com/us/app/atlas-cmms/id6751547284';
 
 export default function MobileAppDownloadDialog({
   open,

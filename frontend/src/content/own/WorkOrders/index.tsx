@@ -993,7 +993,10 @@ function WorkOrders() {
               try {
                 await exportEntity(item.key);
               } catch (error) {
-                showSnackBar(t('Export failed'), 'error');
+                showSnackBar(
+                  getErrorMessage(error, t('Export failed')),
+                  'error'
+                );
               }
               handleCloseMenu();
             }}
@@ -1011,7 +1014,11 @@ function WorkOrders() {
       <Helmet>
         <title>{t('work_orders')}</title>
       </Helmet>
-      <Box justifyContent="center" alignItems="stretch" paddingX={{ xs: 2, md: 3, lg: 4 }}>
+      <Box
+        justifyContent="center"
+        alignItems="stretch"
+        paddingX={{ xs: 2, md: 3, lg: 4 }}
+      >
         <Box
           my={1}
           display="flex"

@@ -916,7 +916,10 @@ function PMs() {
                 try {
                   await exportEntity('preventive-maintenances');
                 } catch (error) {
-                  showSnackBar(t('Export failed'), 'error');
+                  showSnackBar(
+                    getErrorMessage(error, t('Export failed')),
+                    'error'
+                  );
                 }
                 handleCloseMenu();
               }}

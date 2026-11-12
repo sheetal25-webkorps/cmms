@@ -1,13 +1,15 @@
-import { Button, Card, Stack, Typography } from '@mui/material';
+import { Card, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import useAuth from '../../../hooks/useAuth';
-import { Link as RouterLink } from 'react-router-dom';
-import { isCloudVersion } from '../../../config';
-import { getLocalizedHomeUrl } from '../../../utils/urlPaths';
+// Used by the hidden upgrade button below.
+// import { Button } from '@mui/material';
+// import useAuth from '../../../hooks/useAuth';
+// import { Link as RouterLink } from 'react-router-dom';
+// import { isCloudVersion } from '../../../config';
+// import { getLocalizedHomeUrl } from '../../../utils/urlPaths';
 
 export default function FeatureErrorMessage({ message }: { message: string }) {
-  const { t, i18n }: { t: any; i18n: any } = useTranslation();
-  const { user } = useAuth();
+  const { t }: { t: any } = useTranslation();
+  // const { user } = useAuth();
   return (
     <Card
       sx={{
@@ -21,6 +23,7 @@ export default function FeatureErrorMessage({ message }: { message: string }) {
     >
       <Stack spacing={4}>
         <Typography variant="h4">{t(message)}</Typography>
+        {/* Upgrade button hidden for this deployment.
         {user.ownsCompany && (
           <Button
             component={isCloudVersion ? RouterLink : 'a'}
@@ -40,6 +43,7 @@ export default function FeatureErrorMessage({ message }: { message: string }) {
             {t('upgrade_now')}
           </Button>
         )}
+        */}
       </Stack>
     </Card>
   );

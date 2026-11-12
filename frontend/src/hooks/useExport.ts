@@ -59,7 +59,11 @@ export const useExport = (): UseExportReturn => {
       return new Promise((resolve, reject) => {
         // Check if stompClient is initialized
         if (!stompClient) {
-          reject(new Error('WebSocket connection not initialized'));
+          reject(
+            new Error(
+              'Export is still connecting. Please try again in a moment.'
+            )
+          );
           return;
         }
 
@@ -72,7 +76,9 @@ export const useExport = (): UseExportReturn => {
           function (message) {
             try {
               const url = message.body;
-              if (url.includes('error:')) reject();
+              // Pass the server's reason on so the toast can show it.
+              if (url.includes('error:'))
+                reject(new Error(url.replace(/^error:\s*/, '')));
               else {
                 window.open(url, '_blank');
                 resolve();

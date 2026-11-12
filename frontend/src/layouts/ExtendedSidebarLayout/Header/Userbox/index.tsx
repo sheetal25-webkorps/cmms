@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import useAuth from 'src/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,11 +29,16 @@ import type { ApexOptions } from 'apexcharts';
 import PersonOutlineTwoToneIcon from '@mui/icons-material/PersonOutlineTwoTone';
 import BusinessTwoToneIcon from '@mui/icons-material/BusinessTwoTone';
 import SwitchLeftTwoToneIcon from '@mui/icons-material/SwitchLeftTwoTone';
-import HelpTwoToneIcon from '@mui/icons-material/HelpTwoTone';
+// import HelpTwoToneIcon from '@mui/icons-material/HelpTwoTone';
 import PhoneAndroidTwoToneIcon from '@mui/icons-material/PhoneAndroidTwoTone';
 import CloseIcon from '@mui/icons-material/Close';
 import { QRCodeSVG } from 'qrcode.react';
-import { homeUrl } from '../../../../config';
+import { apiUrl } from '../../../../config';
+import { CustomSnackBarContext } from '../../../../contexts/CustomSnackBarContext';
+import {
+  APP_STORE_URL,
+  PLAY_STORE_URL
+} from '../../../../components/MobileAppDownloadDialog';
 
 const DotLegend = styled('span')(
   ({ theme }) => `
@@ -133,6 +138,12 @@ function HeaderUserbox() {
   const ref = useRef<any>(null);
   const [isOpen, setOpen] = useState<boolean>(false);
   const [isQrDialogOpen, setQrDialogOpen] = useState<boolean>(false);
+  const { showSnackBar } = useContext(CustomSnackBarContext);
+  // Absolute API address (e.g. http://host:9014/api) that the mobile app's "Custom server" expects.
+  const mobileServerUrl = new URL(apiUrl, window.location.origin).href.replace(
+    /\/$/,
+    ''
+  );
 
   const handleOpen = (): void => {
     setOpen(true);
@@ -376,6 +387,7 @@ function HeaderUserbox() {
               </Box>
             </MenuItem>
           )}
+          {/* Documentation link hidden for this deployment.
           <MenuItem
             onClick={() => {
               window.open('https://grashjs.github.io/user-guide');
@@ -400,7 +412,9 @@ function HeaderUserbox() {
               />
             </Box>
           </MenuItem>
-          <MenuItem onClick={handleOpenQrDialog}>
+          */}
+          {/* Shown but disabled for now; remove `disabled` to enable the download dialog below. */}
+          <MenuItem disabled onClick={handleOpenQrDialog}>
             <ListItemIcon>
               <PhoneAndroidTwoToneIcon />
             </ListItemIcon>
@@ -493,32 +507,82 @@ function HeaderUserbox() {
             alignItems: 'center'
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              bgcolor: 'common.white',
-              borderRadius: 2,
-              mb: 3
-            }}
-          >
-            <QRCodeSVG
-              value={`${homeUrl}mb-app`}
-              size={220}
-              level="H"
-              includeMargin
-            />
-          </Box>
           <Typography
             variant="body1"
             align="center"
             color="text.secondary"
-            sx={{ mb: 1 }}
+            sx={{ mb: 3 }}
           >
             {t('scan_qr_to_download')}
           </Typography>
-          <Link href={`${homeUrl}mb-app`} variant="body2">
-            {`${homeUrl}mb-app`}
-          </Link>
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            justifyContent="center"
+            gap={4}
+            mb={4}
+          >
+            {[
+              { label: 'Android', url: PLAY_STORE_URL, store: 'Google Play' },
+              { label: 'iPhone', url: APP_STORE_URL, store: 'App Store' }
+            ].map(({ label, url, store }) => (
+              <Box
+                key={label}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+              >
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  {label}
+                </Typography>
+                <Box sx={{ p: 1, bgcolor: 'common.white', borderRadius: 2 }}>
+                  <QRCodeSVG value={url} size={150} level="M" includeMargin />
+                </Box>
+                <Link
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="body2"
+                  sx={{ mt: 1 }}
+                >
+                  {store}
+                </Link>
+              </Box>
+            ))}
+          </Box>
+          {/* The store app connects to our server once this address is entered under "Custom server". */}
+          <Typography variant="body2" align="center" sx={{ mb: 1 }}>
+            {t('mobile_app_server_hint', {
+              defaultValue:
+                'After installing, tap "Custom server" on the app\'s login screen and enter this server address:'
+            })}
+          </Typography>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography
+              variant="subtitle1"
+              fontWeight="bold"
+              sx={{ wordBreak: 'break-all' }}
+            >
+              {mobileServerUrl}
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                navigator.clipboard
+                  ?.writeText(mobileServerUrl)
+                  .then(() =>
+                    showSnackBar(
+                      t('copied', { defaultValue: 'Copied' }),
+                      'success'
+                    )
+                  )
+                  .catch(() => undefined);
+              }}
+            >
+              {t('copy', { defaultValue: 'Copy' })}
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
     </>

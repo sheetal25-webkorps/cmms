@@ -125,6 +125,7 @@ function CompanyPlan(props: CompanyPlanProps) {
         </Typography>
         <Box sx={{ mt: 2 }}>
           {/* Self-hosted deployments have every feature enabled; upgrades only apply to the cloud plan. */}
+          {/* Upgrade and pricing buttons hidden for this deployment.
           {isCloudVersion && (
             <Button
               sx={{ mr: 2 }}
@@ -150,6 +151,7 @@ function CompanyPlan(props: CompanyPlanProps) {
               {t('learn_more')}
             </Button>
           )}
+          */}
           {isCloudVersion && company.subscription.activated && (
             <Button
               disabled={loadingBilling}

@@ -4,10 +4,11 @@ import EventTwoToneIcon from '@mui/icons-material/EventTwoTone';
 import PowerSettingsNewTwoToneIcon from '@mui/icons-material/PowerSettingsNewTwoTone';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import useAuth from 'src/hooks/useAuth';
-import UpgradeTwoToneIcon from '@mui/icons-material/UpgradeTwoTone';
-import QuestionMarkTwoToneIcon from '@mui/icons-material/QuestionMarkTwoTone';
-import { homeUrl, isCloudVersion } from '../../../../config';
-import { getLocalizedHomeUrl } from '../../../../utils/urlPaths';
+// Used by the hidden upgrade/documentation buttons below.
+// import UpgradeTwoToneIcon from '@mui/icons-material/UpgradeTwoTone';
+// import QuestionMarkTwoToneIcon from '@mui/icons-material/QuestionMarkTwoTone';
+// import { homeUrl, isCloudVersion } from '../../../../config';
+// import { getLocalizedHomeUrl } from '../../../../utils/urlPaths';
 import { useContext } from 'react';
 import { CompanySettingsContext } from '../../../../contexts/CompanySettingsContext';
 
@@ -53,6 +54,7 @@ function SidebarFooter({ collapsed = false }: { collapsed?: boolean }) {
         borderTop: `1px solid ${alpha(theme.colors.alpha.trueWhite[100], 0.08)}`
       }}
     >
+      {/* Upgrade and documentation buttons hidden for this deployment.
       {isCloudVersion &&
         user.ownsCompany &&
         user.superAccountRelations.length === 0 && (
@@ -83,6 +85,7 @@ function SidebarFooter({ collapsed = false }: { collapsed?: boolean }) {
           <QuestionMarkTwoToneIcon fontSize="small" />
         </IconButton>
       </Tooltip>
+      */}
       {user.superAccountRelations.length === 0 && (
         <Tooltip placement={collapsed ? 'right' : 'top'} arrow title={t('wo_calendar')}>
           <IconButton

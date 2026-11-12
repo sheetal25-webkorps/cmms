@@ -9,7 +9,7 @@ MVN="${MVN:-$(ls -d "$HOME"/.m2/wrapper/dists/apache-maven-3.9.5-bin/*/apache-ma
 # Read with a loop: `source <(...)` silently loads nothing in macOS's bash 3.2.
 while IFS= read -r line; do
   export "${line%%=*}=${line#*=}"
-done < <(grep -E '^(JWT_SECRET_KEY|ENABLE_EMAIL_NOTIFICATIONS|INVITATION_VIA_EMAIL|MAIL_TYPE|SMTP_[A-Z]+|MAIL_RECIPIENTS|LDAP_[A-Z_]+|ENABLE_SSO)=' "$ROOT/.env")
+done < <(grep -E '^(JWT_SECRET_KEY|ENABLE_EMAIL_NOTIFICATIONS|INVITATION_VIA_EMAIL|MAIL_TYPE|SMTP_[A-Z]+|MAIL_RECIPIENTS|LDAP_[A-Z_]+|ENABLE_SSO|MINIO_USER|MINIO_PASSWORD)=' "$ROOT/.env")
 : "${JWT_SECRET_KEY:?JWT_SECRET_KEY missing from .env}"
 
 set -a
@@ -18,8 +18,15 @@ DB_USER="${DB_USER:-$USER}"
 DB_PWD="${DB_PWD:-}"
 PUBLIC_API_URL=http://localhost:8080
 PUBLIC_FRONT_URL=http://localhost:3000
-STORAGE_TYPE=minio
 ENABLE_MAIL_HEALTH_CHECK=false
+# File storage (exports, uploads): the local MinIO container on port 9000. Start it with
+#   docker start cmms-local-minio
+STORAGE_TYPE=minio
+MINIO_ENDPOINT=http://localhost:9000
+PUBLIC_MINIO_ENDPOINT=http://localhost:9000
+MINIO_BUCKET=atlas-bucket
+MINIO_ACCESS_KEY="${MINIO_USER:-}"
+MINIO_SECRET_KEY="${MINIO_PASSWORD:-}"
 set +a
 
 cd "$ROOT/api"

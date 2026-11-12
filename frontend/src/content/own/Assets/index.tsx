@@ -322,7 +322,7 @@ function Assets() {
             try {
               await exportEntity('assets');
             } catch (error) {
-              showSnackBar(t('Export failed'), 'error');
+              showSnackBar(getErrorMessage(error, t('Export failed')), 'error');
             }
           }}
         >
@@ -987,7 +987,11 @@ function Assets() {
         <Helmet>
           <title>{t('assets')}</title>
         </Helmet>
-        <Box justifyContent="center" alignItems="stretch" paddingX={{ xs: 2, md: 3, lg: 4 }}>
+        <Box
+          justifyContent="center"
+          alignItems="stretch"
+          paddingX={{ xs: 2, md: 3, lg: 4 }}
+        >
           <Box
             my={1}
             display="flex"
